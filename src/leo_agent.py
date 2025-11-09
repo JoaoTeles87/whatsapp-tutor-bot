@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Dict
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
@@ -8,6 +9,12 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 
 logger = logging.getLogger(__name__)
+
+# Rate limiting: track last message time per user
+_last_message_time: Dict[str, float] = {}
+_message_count: Dict[str, int] = {}
+MIN_MESSAGE_INTERVAL = 2  # seconds between messages
+MAX_MESSAGES_PER_HOUR = 30  # max messages per user per hour
 
 # System prompt with dual-mode instructions
 SYSTEM_PROMPT_NEW_USER = """Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
@@ -159,6 +166,35 @@ class LeoAgent:
             return True
         return len(self.memories[phone_number].messages) == 0
     
+    def check_rate_limit(self, phone_number: str) -> tuple[bool, str]:
+        """
+        Check if user is within rate limits
+        
+        Returns:
+            (allowed, message) - True if allowed, False with reason if not
+        """
+        current_time = time.time()
+        
+        # Check minimum interval between messages
+        if phone_number in _last_message_time:
+            time_since_last = current_time - _last_message_time[phone_number]
+            if time_since_last < MIN_MESSAGE_INTERVAL:
+                return False, "Calma aí! Espera só um pouquinho antes de mandar outra mensagem 😅"
+        
+        # Check hourly message count
+        if phone_number not in _message_count:
+            _message_count[phone_number] = 0
+        
+        if _message_count[phone_number] >= MAX_MESSAGES_PER_HOUR:
+            return False, "Opa, você já mandou muitas mensagens hoje! Vamos conversar mais amanhã? 😊"
+        
+        return True, ""
+    
+    def update_rate_limit(self, phone_number: str):
+        """Update rate limit counters"""
+        _last_message_time[phone_number] = time.time()
+        _message_count[phone_number] = _message_count.get(phone_number, 0) + 1
+    
     async def generate_response(self, phone_number: str, message: str) -> str:
         """
         Generate response using LangChain with conversation memory
@@ -171,6 +207,19 @@ class LeoAgent:
             Generated response text
         """
         try:
+            # Check rate limits
+            allowed, limit_message = self.check_rate_limit(phone_number)
+            if not allowed:
+                logger.warning(f"Rate limit exceeded for {phone_number}")
+                return limit_message
+            
+            # Input validation
+            if len(message) > 500:
+                return "Opa, sua mensagem tá muito grande! Tenta resumir um pouco? 😅"
+            
+            if not message.strip():
+                return "Não entendi... pode mandar de novo? 🤔"
+            
             # Check if this is a new user
             is_new = self.is_new_user(phone_number)
             
@@ -197,6 +246,9 @@ class LeoAgent:
             # Add messages to memory
             memory.add_user_message(message)
             memory.add_ai_message(response.content)
+            
+            # Update rate limit
+            self.update_rate_limit(phone_number)
             
             logger.info(f"Generated response for {phone_number}")
             return response.content.strip()

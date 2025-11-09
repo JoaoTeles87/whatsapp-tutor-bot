@@ -11,6 +11,8 @@ class MessageKey(BaseModel):
     """Evolution API message key structure"""
     remoteJid: str
     fromMe: bool
+    id: Optional[str] = None
+    participant: Optional[str] = None
 
 
 class MessageContent(BaseModel):
@@ -21,12 +23,23 @@ class MessageContent(BaseModel):
     videoMessage: Optional[Dict[str, Any]] = None
 
 
-class WebhookPayload(BaseModel):
-    """Evolution API webhook payload structure"""
+class MessageData(BaseModel):
+    """Evolution API data structure"""
     key: MessageKey
     message: MessageContent
-    messageType: Optional[str] = None
     pushName: Optional[str] = None
+    messageType: Optional[str] = None
+    messageTimestamp: Optional[int] = None
+
+
+class WebhookPayload(BaseModel):
+    """Evolution API webhook payload structure"""
+    event: str
+    instance: str
+    data: MessageData
+    destination: Optional[str] = None
+    date_time: Optional[str] = None
+    sender: Optional[str] = None
 
 
 def create_webhook_app(message_processor: MessageProcessor) -> FastAPI:
@@ -55,32 +68,37 @@ def create_webhook_app(message_processor: MessageProcessor) -> FastAPI:
         try:
             # Get raw body for logging
             body = await request.json()
-            logger.info(f"Received webhook payload: {body}")
+            logger.info(f"Received webhook event: {body.get('event')}")
             
             # Parse payload
             payload = WebhookPayload(**body)
             
+            # Only process message events
+            if payload.event != "messages.upsert":
+                logger.info(f"Ignoring non-message event: {payload.event}")
+                return {"status": "ignored", "reason": "not_message_event"}
+            
             # Ignore messages sent by the bot itself
-            if payload.key.fromMe:
+            if payload.data.key.fromMe:
                 logger.info("Ignoring message from bot itself (fromMe=true)")
                 return {"status": "ignored", "reason": "fromMe"}
             
             # Extract phone number from remoteJid
-            phone_number = extract_phone_number(payload.key.remoteJid)
+            phone_number = extract_phone_number(payload.data.key.remoteJid)
             
             # Extract message text from different possible fields
             message_text = None
             
             # Try conversation field first
-            if payload.message.conversation:
-                message_text = payload.message.conversation
+            if payload.data.message.conversation:
+                message_text = payload.data.message.conversation
             # Try extendedTextMessage
-            elif payload.message.extendedTextMessage:
-                message_text = payload.message.extendedTextMessage.get("text")
+            elif payload.data.message.extendedTextMessage:
+                message_text = payload.data.message.extendedTextMessage.get("text")
             
             # Validate message text exists
             if not message_text:
-                logger.warning(f"No text message in payload from {phone_number}. Message type: {payload.messageType}")
+                logger.warning(f"No text message in payload from {phone_number}. Message type: {payload.data.messageType}")
                 return {"status": "ignored", "reason": "no_text"}
             
             logger.info(f"Processing message from {phone_number}: {message_text[:50]}...")
