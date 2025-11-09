@@ -1,4 +1,4 @@
-# 🦜 Sabiá - Monitor de Engajamento Escolar (Paraíba)
+##  Farol - Monitor de Engajamento Escolar (Paraíba)
 
 Dashboard em Streamlit para monitoramento de desmotivação escolar na rede pública da Paraíba.
 
