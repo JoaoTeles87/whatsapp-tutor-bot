@@ -79,6 +79,12 @@ e preencher um JSON, usando o framework de engajamento de Fredricks (2004).
 2. **observacoes_chave**: Extraia 1 ou 2 frases exatas do aluno que justificam sua análise.
 3. **Localização**: Use "João Pessoa" como cidade, lat: -7.1195, lon: -34.845
 
+[IMPORTANTE - CONTEXTO DE CONVERSA]
+- Mensagens curtas de saudação ("Oi", "Olá", apresentações) NÃO devem ser interpretadas como desmotivação
+- Considere o CONTEXTO COMPLETO da conversa, não apenas mensagens isoladas
+- Se o aluno está iniciando a conversa de forma educada, isso é NEUTRO (score ~0.5), não negativo
+- Só classifique como alta desmotivação (>0.7) se houver EVIDÊNCIAS CLARAS de frustração, desistência ou desinteresse
+
 Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
         
         logger.info("AgenteAnalista initialized with Fredricks framework")
@@ -95,6 +101,19 @@ Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
             AnaliseEngajamento with scores
         """
         try:
+            # Skip analysis for very short conversations (less than 3 student messages)
+            student_messages = [msg for msg in historico if msg['role'] == 'user']
+            
+            if len(student_messages) < 3:
+                logger.info(f"Skipping analysis for {aluno_id}: conversation too short ({len(student_messages)} messages)")
+                return None  # Don't analyze yet
+            
+            # Skip if total conversation content is too short (greeting only)
+            total_content = " ".join([msg['content'] for msg in student_messages])
+            if len(total_content.strip()) < 20:  # Less than 20 characters total
+                logger.info(f"Skipping analysis for {aluno_id}: content too minimal")
+                return None
+            
             # Format conversation for analysis
             conversa_texto = "\n".join([
                 f"{'Aluno' if msg['role'] == 'user' else 'Nino'}: {msg['content']}"

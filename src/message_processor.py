@@ -102,8 +102,11 @@ class MessageProcessor:
                             
                             # Run analysis in background
                             logger.info(f"Running engagement analysis for {phone_number}")
-                            await self.analytics_agent.analisar_conversa(phone_number, historico)
-                            logger.info(f"Engagement analysis complete for {phone_number}")
+                            result = await self.analytics_agent.analisar_conversa(phone_number, historico)
+                            if result:
+                                logger.info(f"Engagement analysis complete for {phone_number}: risk={result.score_desmotivacao:.2f}")
+                            else:
+                                logger.info(f"Engagement analysis skipped for {phone_number}: conversation too short")
                     except Exception as analytics_error:
                         logger.error(f"Error in analytics: {analytics_error}")
             else:
