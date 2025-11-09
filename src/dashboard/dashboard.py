@@ -19,7 +19,12 @@ st.title("🔦 Farol - Monitor de Engajamento Escolar (Paraíba)")
 @st.cache_data(ttl=5)
 def carregar_dados():
     try:
-        with open('alertas.json', 'r', encoding='utf-8') as f:
+        # Read from root directory (two levels up from src/dashboard/)
+        import os
+        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        alertas_path = os.path.join(root_dir, 'alertas.json')
+        
+        with open(alertas_path, 'r', encoding='utf-8') as f:
             dados = json.load(f)
         df = pd.DataFrame(dados)
         # Parse timestamp with ISO8601 format to handle microseconds
