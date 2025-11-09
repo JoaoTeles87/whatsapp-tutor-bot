@@ -1,4 +1,4 @@
-# Implementation Plan - Leo Educational Agent
+# Implementation Plan - Nino Educational Agent
 
 - [x] 1. Set up project structure and configuration
 
@@ -30,7 +30,7 @@
 
 
 - [ ] 3. Implement LangChain agent with dual-mode prompts
-  - [ ] 3.1 Create LeoAgent class with LangChain integration
+  - [ ] 3.1 Create NinoAgent class with LangChain integration
     - Initialize ChatOpenAI with model and temperature from config
     - Create system prompt with dual-mode instructions (empathetic + academic)
     - Set up ChatPromptTemplate with system message and MessagesPlaceholder
@@ -57,9 +57,9 @@
 - [ ] 4. Implement message processor
   - [x] 4.1 Create MessageProcessor class
 
-    - Initialize with LeoAgent and EvolutionAPIClient instances
+    - Initialize with NinoAgent and EvolutionAPIClient instances
     - Implement async process_message method
-    - Call LeoAgent to generate response
+    - Call NinoAgent to generate response
     - Call EvolutionAPIClient to send response
     - Add error handling and logging
     - _Requirements: 1.2, 2.1, 3.3, 4.1_

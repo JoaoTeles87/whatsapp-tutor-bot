@@ -1,8 +1,8 @@
-# Design Document - Leo Educational Agent
+# Design Document - Nino Educational Agent
 
 ## Overview
 
-The Leo Educational Agent is a Python-based WhatsApp chatbot that integrates with an existing Evolution API instance. The system receives messages via webhook, processes them using LangChain with OpenAI LLM, maintains conversation context in memory, and sends responses back through the Evolution API.
+The Nino Educational Agent is a Python-based WhatsApp chatbot that integrates with an existing Evolution API instance. The system receives messages via webhook, processes them using LangChain with OpenAI LLM, maintains conversation context in memory, and sends responses back through the Evolution API.
 
 **Core Design Principles:**
 - FastAPI for modern async webhook handling
@@ -17,7 +17,7 @@ The Leo Educational Agent is a Python-based WhatsApp chatbot that integrates wit
 
 ```
 ┌─────────────┐         ┌──────────────────┐         ┌─────────────┐
-│  WhatsApp   │◄───────►│  Evolution API   │◄───────►│  Leo Agent  │
+│  WhatsApp   │◄───────►│  Evolution API   │◄───────►│  Nino Agent  │
 │   Users     │         │   (External)     │         │   System    │
 └─────────────┘         └──────────────────┘         └─────────────┘
                                                              │
@@ -31,7 +31,7 @@ The Leo Educational Agent is a Python-based WhatsApp chatbot that integrates wit
 
 ```
 ┌────────────────────────────────────────────────────┐
-│              Leo Agent System                      │
+│              Nino Agent System                      │
 │                                                    │
 │  ┌──────────────┐    ┌─────────────────┐         │
 │  │   Webhook    │───►│  Message        │         │
@@ -79,7 +79,7 @@ Request Body (Evolution API format):
     "fromMe": false
   },
   "message": {
-    "conversation": "Oi Leo, preciso de ajuda com matemática"
+    "conversation": "Oi Nino, preciso de ajuda com matemática"
   }
 }
 
@@ -119,12 +119,12 @@ class MessageProcessor:
 
 **Components:**
 - **ConversationBufferWindowMemory**: LangChain memory to store last 10 message exchanges per user
-- **ChatOpenAI**: LLM instance configured for Leo's personality
+- **ChatOpenAI**: LLM instance configured for Nino's personality
 - **Prompt Templates**: Dual-mode prompts for empathetic and academic responses
 
 **Interface:**
 ```python
-class LeoAgent:
+class NinoAgent:
     def __init__(self):
         self.memories = {}  # phone_number -> ConversationBufferWindowMemory
         self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
@@ -144,11 +144,11 @@ class LeoAgent:
 
 ### 4. Prompt Templates (Dual-Mode)
 
-**Responsibility:** Define Leo's behavior for different interaction types
+**Responsibility:** Define Nino's behavior for different interaction types
 
 **System Prompt (Base):**
 ```
-Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
+Você é o Nino, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
 
 Características gerais:
 - Fale como um aluno do 6º ano (11-12 anos)

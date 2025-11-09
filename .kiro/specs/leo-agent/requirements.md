@@ -2,11 +2,11 @@
 
 ## Introduction
 
-O Agente Educacional Leo é um chatbot para WhatsApp que atua como tutor virtual para alunos do 6º ano. O sistema se conecta à Evolution API existente para receber e enviar mensagens, processando perguntas dos alunos com respostas empáticas e informativas baseadas em contexto educacional.
+O Agente Educacional Nino é um chatbot para WhatsApp que atua como tutor virtual para alunos do 6º ano. O sistema se conecta à Evolution API existente para receber e enviar mensagens, processando perguntas dos alunos com respostas empáticas e informativas baseadas em contexto educacional.
 
 ## Glossary
 
-- **Leo**: O nome do agente conversacional que interage com os alunos
+- **Nino**: O nome do agente conversacional que interage com os alunos
 - **Agent System**: Sistema principal que processa mensagens e gera respostas usando LLM
 - **Evolution API**: API de integração com WhatsApp já configurada que envia e recebe mensagens
 - **Webhook Handler**: Componente que recebe notificações HTTP de mensagens do WhatsApp
@@ -28,7 +28,7 @@ O Agente Educacional Leo é um chatbot para WhatsApp que atua como tutor virtual
 
 ### Requirement 2
 
-**User Story:** Como desenvolvedor, eu quero enviar respostas para o WhatsApp via Evolution API, para que os alunos recebam as mensagens do Leo
+**User Story:** Como desenvolvedor, eu quero enviar respostas para o WhatsApp via Evolution API, para que os alunos recebam as mensagens do Nino
 
 #### Acceptance Criteria
 
@@ -50,13 +50,13 @@ O Agente Educacional Leo é um chatbot para WhatsApp que atua como tutor virtual
 
 ### Requirement 4
 
-**User Story:** Como aluno, eu quero conversar com o Leo e receber respostas empáticas e úteis, para que eu me sinta acolhido e apoiado
+**User Story:** Como aluno, eu quero conversar com o Nino e receber respostas empáticas e úteis, para que eu me sinta acolhido e apoiado
 
 #### Acceptance Criteria
 
 1. WHEN o Agent System recebe uma mensagem de aluno, THE Agent System SHALL usar o LLM Provider para gerar uma resposta
 2. THE Agent System SHALL incluir o histórico de conversa como contexto para o LLM Provider
-3. THE Agent System SHALL usar um system prompt que define Leo como colega de classe empático do 6º ano
+3. THE Agent System SHALL usar um system prompt que define Nino como colega de classe empático do 6º ano
 4. THE Agent System SHALL gerar respostas usando linguagem apropriada para alunos do 6º ano com emojis quando apropriado
 
 ### Requirement 5
