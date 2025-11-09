@@ -6,3 +6,5 @@ langchain-groq
 langchain-community
 httpx
 python-dotenv
+faiss-cpu
+pydantic

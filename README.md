@@ -1,5 +1,7 @@
 # Leo Educational Agent
 
+> ⚠️ **Status**: MVP/Protótipo de Hackathon - Funcional mas não pronto para produção
+
 Chatbot educacional para WhatsApp que atua como tutor virtual para alunos do 6º ano, integrando com Evolution API.
 
 ## Características
@@ -9,6 +11,10 @@ Chatbot educacional para WhatsApp que atua como tutor virtual para alunos do 6º
 - 🧠 Memória de conversação usando LangChain
 - 📱 Integração com WhatsApp via Evolution API
 - ⚡ API assíncrona com FastAPI
+- 🛡️ Proteção contra prompt injection
+- 💰 Monitoramento de custos e uso de API
+- 📚 Sistema RAG para documentos escolares
+- 📊 Analytics com Framework de Fredricks (2004)
 
 ## Requisitos
 
@@ -160,6 +166,45 @@ Quando o aluno tem dúvidas escolares:
 
 - `POST /webhook` - Recebe mensagens da Evolution API
 - `GET /health` - Health check do servidor
+
+## 🛡️ Segurança e Otimização
+
+### Proteção contra Prompt Injection
+- Detecta e bloqueia tentativas de manipulação do AI
+- Sanitização automática de entrada
+- Proteção contra spam e repetição excessiva
+
+### Monitoramento de Custos
+- Rastreamento de uso de API
+- Estatísticas por usuário
+- Limites configuráveis
+
+### Rate Limiting
+- 2 segundos entre mensagens
+- 30 mensagens por hora
+- 100 mensagens totais por usuário
+
+📖 **Documentação completa**: [SECURITY_AND_OPTIMIZATION.md](SECURITY_AND_OPTIMIZATION.md)
+
+## 📚 Documentação Adicional
+
+- [FAQ](FAQ.md) - **LEIA PRIMEIRO** - Perguntas frequentes e limitações conhecidas
+- [RAG & Analytics Setup](RAG_ANALYTICS_SETUP.md) - Sistema de documentos e análise de engajamento
+- [Professor Feature](PROFESSOR_FEATURE.md) - Como professores podem enviar tarefas
+- [Security & Optimization](SECURITY_AND_OPTIMIZATION.md) - Segurança e otimização de custos
+- [Deployment Success](DEPLOYMENT_SUCCESS.md) - Status e configuração atual
+
+## ⚠️ Limitações Conhecidas
+
+- Sem banco de dados (tudo em memória)
+- Perde histórico ao reiniciar
+- Não escala horizontalmente
+- Segurança básica (não production-ready)
+- Sem testes automatizados
+- Estimativas de custo aproximadas
+- Suporta apenas texto (sem áudio/imagem)
+
+Ver [FAQ.md](FAQ.md) para lista completa.
 
 ## Licença
 

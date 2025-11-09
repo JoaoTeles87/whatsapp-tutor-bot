@@ -1,12 +1,14 @@
 import logging
 import time
-from typing import Dict
+from typing import Dict, Optional
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
+from src.security import SecurityGuard
+from src.cost_monitor import CostMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +93,7 @@ class LeoAgent:
     """LangChain-based agent for Leo educational chatbot"""
     
     def __init__(self, api_key: str, model: str = "llama-3.1-70b-versatile", 
-                 max_messages: int = 20, provider: str = "groq"):
+                 max_messages: int = 20, provider: str = "groq", rag_service=None):
         """
         Initialize Leo agent with LangChain
         
@@ -100,7 +102,15 @@ class LeoAgent:
             model: LLM model name
             max_messages: Maximum messages to keep in memory per user
             provider: LLM provider ('openai' or 'groq')
+            rag_service: Optional RAG service for document retrieval
         """
+        self.rag_service = rag_service
+        self.provider = provider
+        self.model = model
+        
+        # Initialize security and monitoring
+        self.security = SecurityGuard()
+        self.cost_monitor = CostMonitor()
         # Initialize LLM based on provider
         if provider == "groq":
             self.llm = ChatGroq(
@@ -213,12 +223,26 @@ class LeoAgent:
                 logger.warning(f"Rate limit exceeded for {phone_number}")
                 return limit_message
             
+            # Security check: prompt injection
+            is_safe, security_msg = self.security.check_prompt_injection(message)
+            if not is_safe:
+                logger.warning(f"Security block for {phone_number}: {security_msg}")
+                return security_msg
+            
+            # Sanitize input
+            message = self.security.sanitize_input(message)
+            
             # Input validation
             if len(message) > 500:
                 return "Opa, sua mensagem tá muito grande! Tenta resumir um pouco? 😅"
             
             if not message.strip():
                 return "Não entendi... pode mandar de novo? 🤔"
+            
+            # Check user API limits
+            within_limit, limit_msg = self.cost_monitor.check_user_limit(phone_number, max_requests=100)
+            if not within_limit:
+                return limit_msg
             
             # Check if this is a new user
             is_new = self.is_new_user(phone_number)
@@ -229,6 +253,14 @@ class LeoAgent:
             # Get chat history (limit to last 20 messages)
             messages = memory.messages[-20:] if len(memory.messages) > 20 else memory.messages
             
+            # Check if RAG context is needed (keywords: tarefa, calendario, prova, trabalho)
+            rag_context = None
+            if self.rag_service and any(keyword in message.lower() for keyword in 
+                                       ["tarefa", "calendario", "prova", "trabalho", "professor", "quando"]):
+                rag_context = self.rag_service.search(message)
+                if rag_context:
+                    logger.info(f"RAG context found for: {message[:50]}...")
+            
             # Choose prompt based on user status
             if is_new:
                 chain = self.prompt_new_user | self.llm
@@ -237,10 +269,15 @@ class LeoAgent:
                 chain = self.prompt_returning_user | self.llm
                 logger.info(f"Returning user: {phone_number} - Using regular prompt")
             
+            # Prepare input with RAG context if available
+            input_message = message
+            if rag_context:
+                input_message = f"[CONTEXTO DOS DOCUMENTOS DA ESCOLA]:\n{rag_context}\n\n[PERGUNTA DO ALUNO]: {message}"
+            
             # Generate response
             response = await chain.ainvoke({
                 "chat_history": messages,
-                "input": message
+                "input": input_message
             })
             
             # Add messages to memory
@@ -249,6 +286,10 @@ class LeoAgent:
             
             # Update rate limit
             self.update_rate_limit(phone_number)
+            
+            # Log API usage for cost monitoring
+            estimated_tokens = self.security.estimate_tokens(message + response.content)
+            self.cost_monitor.log_request(self.provider, self.model, estimated_tokens, phone_number)
             
             logger.info(f"Generated response for {phone_number}")
             return response.content.strip()

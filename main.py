@@ -8,6 +8,10 @@ from src.leo_agent import LeoAgent
 from src.evolution_client import EvolutionAPIClient
 from src.message_processor import MessageProcessor
 from src.webhook import create_webhook_app
+from src.rag_service import RAGService
+from src.analytics_agent import AgenteAnalista
+from src.professor_agent import ProfessorAgent
+from src.professor_agent import ProfessorAgent
 
 # Configure logging
 logging.basicConfig(
@@ -44,12 +48,22 @@ async def lifespan(app: FastAPI):
 # Initialize components
 logger.info("Initializing components...")
 
-# Create Leo agent
+# Create RAG service (optional)
+rag_service = RAGService(api_key=config.LLM_API_KEY)
+
+# Create Analytics agent
+analytics_agent = AgenteAnalista(api_key=config.LLM_API_KEY, model=config.LLM_MODEL)
+
+# Create Professor agent
+professor_agent = ProfessorAgent(api_key=config.LLM_API_KEY, model=config.LLM_MODEL)
+
+# Create Leo agent with RAG
 leo_agent = LeoAgent(
     api_key=config.LLM_API_KEY,
     model=config.LLM_MODEL,
     max_messages=config.MAX_HISTORY_MESSAGES,
-    provider=config.LLM_PROVIDER
+    provider=config.LLM_PROVIDER,
+    rag_service=rag_service
 )
 
 # Create Evolution API client
@@ -59,10 +73,11 @@ evolution_client = EvolutionAPIClient(
     instance=config.EVOLUTION_INSTANCE
 )
 
-# Create message processor
+# Create message processor with professor agent
 message_processor = MessageProcessor(
     leo_agent=leo_agent,
-    evolution_client=evolution_client
+    evolution_client=evolution_client,
+    professor_agent=professor_agent
 )
 
 # Create FastAPI app with webhook
