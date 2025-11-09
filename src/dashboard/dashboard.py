@@ -7,13 +7,13 @@ import plotly.graph_objects as go
 
 # Configuração da página
 st.set_page_config(
-    page_title="Sabiá - Monitor de Engajamento Escolar",
-    page_icon="🦜",
+    page_title="Farol - Monitor de Engajamento Escolar",
+    page_icon="🔦",
     layout="wide"
 )
 
 # Título principal
-st.title("🦜 Sabiá - Monitor de Engajamento Escolar (Paraíba)")
+st.title("🔦 Farol - Monitor de Engajamento Escolar (Paraíba)")
 
 # Função para carregar dados
 @st.cache_data(ttl=5)
@@ -316,7 +316,7 @@ st.divider()
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.caption("🦜 **Sabiá** - Sistema de Acompanhamento de Bem-estar e Inteligência Acadêmica")
+    st.caption("🔦 **Farol** - Sistema de Monitoramento e Apoio ao Engajamento Escolar")
 
 with col2:
     st.caption(f"📅 Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")

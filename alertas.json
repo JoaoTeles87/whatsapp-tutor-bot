@@ -5,7 +5,9 @@
     "engajamento_emocional": 0.1,
     "engajamento_cognitivo": 0.2,
     "score_desmotivacao": 0.85,
-    "observacoes_chave": ["Mencionou que 'não entende nada' e 'quer parar'"],
+    "observacoes_chave": [
+      "Mencionou que 'não entende nada' e 'quer parar'"
+    ],
     "escola": "Escola Municipal Santos Dumont",
     "cidade": "João Pessoa",
     "lat": -7.1195,
@@ -18,7 +20,9 @@
     "engajamento_emocional": 0.5,
     "engajamento_cognitivo": 0.7,
     "score_desmotivacao": 0.4,
-    "observacoes_chave": ["Frustrado com matemática, mas segue tentando"],
+    "observacoes_chave": [
+      "Frustrado com matemática, mas segue tentando"
+    ],
     "escola": "Colégio Estadual Padre Roma",
     "cidade": "Campina Grande",
     "lat": -7.2305,
@@ -31,7 +35,10 @@
     "engajamento_emocional": 0.05,
     "engajamento_cognitivo": 0.15,
     "score_desmotivacao": 0.9,
-    "observacoes_chave": ["Usou a palavra 'saco' 4 vezes", "Disse 'não sirvo pra isso'"],
+    "observacoes_chave": [
+      "Usou a palavra 'saco' 4 vezes",
+      "Disse 'não sirvo pra isso'"
+    ],
     "escola": "Colégio Estadual Padre Roma",
     "cidade": "Campina Grande",
     "lat": -7.2305,
@@ -44,11 +51,13 @@
     "engajamento_emocional": 0.8,
     "engajamento_cognitivo": 0.7,
     "score_desmotivacao": 0.2,
-    "observacoes_chave": ["Engajado, fazendo quizzes e piadas"],
+    "observacoes_chave": [
+      "Engajado, fazendo quizzes e piadas"
+    ],
     "escola": "Escola Estadual de Patos",
     "cidade": "Patos",
     "lat": -7.025,
-    "lon": -37.280,
+    "lon": -37.28,
     "timestamp": "2025-11-08T11:00:00"
   },
   {
@@ -57,11 +66,14 @@
     "engajamento_emocional": 0.6,
     "engajamento_cognitivo": 0.9,
     "score_desmotivacao": 0.25,
-    "observacoes_chave": ["Estressado com a prova de cálculo", "Perguntou 4x sobre o mesmo tópico de física"],
+    "observacoes_chave": [
+      "Estressado com a prova de cálculo",
+      "Perguntou 4x sobre o mesmo tópico de física"
+    ],
     "escola": "IFPB - Campus João Pessoa",
     "cidade": "João Pessoa",
     "lat": -7.1356,
-    "lon": -34.8760,
+    "lon": -34.876,
     "timestamp": "2025-11-08T10:00:00"
   },
   {
@@ -70,7 +82,10 @@
     "engajamento_emocional": 0.3,
     "engajamento_cognitivo": 0.35,
     "score_desmotivacao": 0.65,
-    "observacoes_chave": ["'não entendi de novo'", "'pra que serve isso?'"],
+    "observacoes_chave": [
+      "'não entendi de novo'",
+      "'pra que serve isso?'"
+    ],
     "escola": "ECIT Lyceu Paraibano",
     "cidade": "João Pessoa",
     "lat": -7.1152,
@@ -82,11 +97,14 @@
     "engajamento_comportamental": 0.15,
     "engajamento_emocional": 0.1,
     "engajamento_cognitivo": 0.05,
-    "score_desmotivacao": 0.90,
-    "observacoes_chave": ["'tenho que ajudar em casa'", "'não deu tempo de fazer'"],
+    "score_desmotivacao": 0.9,
+    "observacoes_chave": [
+      "'tenho que ajudar em casa'",
+      "'não deu tempo de fazer'"
+    ],
     "escola": "ECI Papa Paulo VI (Mangabeira)",
     "cidade": "João Pessoa",
-    "lat": -7.1630,
+    "lat": -7.163,
     "lon": -34.8488,
     "timestamp": "2025-11-08T09:15:00"
   },
@@ -96,7 +114,10 @@
     "engajamento_emocional": 0.6,
     "engajamento_cognitivo": 0.65,
     "score_desmotivacao": 0.4,
-    "observacoes_chave": ["Participou ativamente das atividades", "Fez perguntas relevantes sobre o conteúdo"],
+    "observacoes_chave": [
+      "Participou ativamente das atividades",
+      "Fez perguntas relevantes sobre o conteúdo"
+    ],
     "escola": "Vista Alegre Park, Haras e Hípica",
     "cidade": "João Pessoa",
     "lat": -7.1195,
@@ -109,11 +130,62 @@
     "engajamento_emocional": 0.25,
     "engajamento_cognitivo": 0.2,
     "score_desmotivacao": 0.75,
-    "observacoes_chave": ["'tá muito difícil, não consigo acompanhar'", "'acho que vou reprovar mesmo'"],
+    "observacoes_chave": [
+      "'tá muito difícil, não consigo acompanhar'",
+      "'acho que vou reprovar mesmo'"
+    ],
     "escola": "Vista Alegre Park, Haras e Hípica",
     "cidade": "João Pessoa",
     "lat": -7.1195,
     "lon": -34.845,
     "timestamp": "2025-11-08T17:45:00"
+  },
+  {
+    "aluno_id": "558132991244",
+    "timestamp": "2025-11-09T08:21:45.499369",
+    "engajamento_comportamental": 0.5,
+    "engajamento_emocional": 0.2,
+    "engajamento_cognitivo": 0.3,
+    "score_desmotivacao": 0.7,
+    "observacoes_chave": [
+      "Tô meio desanimado com a escola, não tá dando certo",
+      "Matemática tá muito difícil, não consigo acompanhar a turma"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "5581987654322",
+    "timestamp": "2025-11-09T08:21:46.239170",
+    "engajamento_comportamental": 0.8,
+    "engajamento_emocional": 0.7,
+    "engajamento_cognitivo": 0.9,
+    "score_desmotivacao": 0.1,
+    "observacoes_chave": [
+      "Ah entendi! Deixa eu tentar fazer um exercício",
+      "Preciso de ajuda com frações"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "5581923456780",
+    "timestamp": "2025-11-09T08:21:46.822926",
+    "engajamento_comportamental": 0.8,
+    "engajamento_emocional": 0.4,
+    "engajamento_cognitivo": 0.6,
+    "score_desmotivacao": 0.4,
+    "observacoes_chave": [
+      "Tô com dúvida na tarefa de português",
+      "Não entendi muito bem o que é pra fazer"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
   }
 ]
