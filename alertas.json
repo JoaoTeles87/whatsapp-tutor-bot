@@ -1,0 +1,26 @@
+[
+  {
+    "aluno_id": "5581998991001",
+    "timestamp": "2025-11-08T23:30:00",
+    "engajamento_comportamental": 0.7,
+    "engajamento_emocional": 0.8,
+    "engajamento_cognitivo": 0.6,
+    "score_desmotivacao": 0.3,
+    "observacoes_chave": ["Asked questions about fractions", "Participated actively"],
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "5581999887766",
+    "timestamp": "2025-11-08T22:15:00",
+    "engajamento_comportamental": 0.3,
+    "engajamento_emocional": 0.2,
+    "engajamento_cognitivo": 0.4,
+    "score_desmotivacao": 0.7,
+    "observacoes_chave": ["Said 'I don't understand anything'", "Showed frustration"],
+    "cidade": "Campina Grande",
+    "lat": -7.2306,
+    "lon": -35.8811
+  }
+]
