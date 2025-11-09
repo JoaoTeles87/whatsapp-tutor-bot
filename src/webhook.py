@@ -92,13 +92,16 @@ def create_webhook_app(message_processor: MessageProcessor) -> FastAPI:
             # Try conversation field first
             if payload.data.message.conversation:
                 message_text = payload.data.message.conversation
+                logger.info(f"Message extracted from 'conversation' field")
             # Try extendedTextMessage
             elif payload.data.message.extendedTextMessage:
                 message_text = payload.data.message.extendedTextMessage.get("text")
+                logger.info(f"Message extracted from 'extendedTextMessage' field")
             
             # Validate message text exists
             if not message_text:
                 logger.warning(f"No text message in payload from {phone_number}. Message type: {payload.data.messageType}")
+                logger.warning(f"Full message object: {payload.data.message}")
                 return {"status": "ignored", "reason": "no_text"}
             
             logger.info(f"Processing message from {phone_number}: {message_text[:50]}...")

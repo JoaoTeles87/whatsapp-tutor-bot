@@ -42,6 +42,7 @@ class AnaliseEngajamento(BaseModel):
     )
     
     # Location data for heatmap
+    escola: str = Field(..., description="Nome da escola/instituição")
     cidade: str = Field(..., description="Cidade da escola, ex: João Pessoa")
     lat: float = Field(..., description="Latitude da escola")
     lon: float = Field(..., description="Longitude da escola")
@@ -96,7 +97,7 @@ Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
         try:
             # Format conversation for analysis
             conversa_texto = "\n".join([
-                f"{'Aluno' if msg['role'] == 'user' else 'Leo'}: {msg['content']}"
+                f"{'Aluno' if msg['role'] == 'user' else 'Nino'}: {msg['content']}"
                 for msg in historico
             ])
             
@@ -109,8 +110,25 @@ Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
             # Get analysis from LLM
             response = await self.llm.ainvoke(messages)
             
+            # Clean response content (remove markdown if present)
+            content = response.content.strip()
+            if content.startswith("```json"):
+                content = content.replace("```json", "").replace("```", "").strip()
+            elif content.startswith("```"):
+                content = content.replace("```", "").strip()
+            
             # Parse JSON response
-            analise_dict = json.loads(response.content)
+            analise_dict = json.loads(content)
+            
+            # Ensure location data is present
+            if "escola" not in analise_dict:
+                analise_dict["escola"] = "Vista Alegre Park, Haras e Hípica"
+            if "cidade" not in analise_dict:
+                analise_dict["cidade"] = "João Pessoa"
+            if "lat" not in analise_dict:
+                analise_dict["lat"] = -7.1195
+            if "lon" not in analise_dict:
+                analise_dict["lon"] = -34.845
             
             # Calculate score_desmotivacao if not provided
             if "score_desmotivacao" not in analise_dict:
@@ -139,6 +157,7 @@ Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
                 engajamento_cognitivo=0.5,
                 score_desmotivacao=0.5,
                 observacoes_chave=["Análise não disponível"],
+                escola="Vista Alegre Park, Haras e Hípica",
                 cidade="João Pessoa",
                 lat=-7.1195,
                 lon=-34.845
@@ -165,6 +184,7 @@ Responda APENAS com o objeto JSON válido, sem markdown ou explicações."""
                 "engajamento_cognitivo": analise.engajamento_cognitivo,
                 "score_desmotivacao": analise.score_desmotivacao,
                 "observacoes_chave": analise.observacoes_chave,
+                "escola": analise.escola,
                 "cidade": analise.cidade,
                 "lat": analise.lat,
                 "lon": analise.lon

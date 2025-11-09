@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class MessageProcessor:
     """Processes incoming messages and coordinates response generation"""
     
-    def __init__(self, leo_agent: LeoAgent, evolution_client: EvolutionAPIClient, professor_agent=None):
+    def __init__(self, leo_agent: LeoAgent, evolution_client: EvolutionAPIClient, professor_agent=None, analytics_agent=None):
         """
         Initialize message processor
         
@@ -17,10 +17,12 @@ class MessageProcessor:
             leo_agent: LeoAgent instance for generating responses
             evolution_client: EvolutionAPIClient for sending messages
             professor_agent: Optional ProfessorAgent for handling teacher messages
+            analytics_agent: Optional AnalyticsAgent for engagement analysis
         """
         self.leo_agent = leo_agent
         self.evolution_client = evolution_client
         self.professor_agent = professor_agent
+        self.analytics_agent = analytics_agent
         self.alert_detector = AlertDetector()
         logger.info("MessageProcessor initialized")
     
@@ -77,7 +79,7 @@ class MessageProcessor:
                 await self.evolution_client.send_message(phone_number, crisis_response)
                 return
             
-            # Regular student message - generate response using Leo agent
+            # Regular student message - generate response using Nino agent
             response = await self.leo_agent.generate_response(phone_number, message_text)
             
             # Send response via Evolution API
@@ -85,6 +87,25 @@ class MessageProcessor:
             
             if success:
                 logger.info(f"Successfully processed and responded to {phone_number}")
+                
+                # Analyze conversation for engagement metrics (async, don't wait)
+                if self.analytics_agent:
+                    try:
+                        # Get conversation history
+                        memory = self.leo_agent.get_or_create_memory(phone_number)
+                        if len(memory.messages) >= 4:  # Analyze after at least 2 exchanges
+                            # Convert to format expected by analytics agent
+                            historico = []
+                            for msg in memory.messages:
+                                role = "user" if msg.type == "human" else "assistant"
+                                historico.append({"role": role, "content": msg.content})
+                            
+                            # Run analysis in background
+                            logger.info(f"Running engagement analysis for {phone_number}")
+                            await self.analytics_agent.analisar_conversa(phone_number, historico)
+                            logger.info(f"Engagement analysis complete for {phone_number}")
+                    except Exception as analytics_error:
+                        logger.error(f"Error in analytics: {analytics_error}")
             else:
                 logger.error(f"Failed to send response to {phone_number}")
                 

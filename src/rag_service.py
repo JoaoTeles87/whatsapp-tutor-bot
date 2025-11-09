@@ -4,7 +4,7 @@ RAG Service for retrieving school documents
 import logging
 import os
 from typing import Optional
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class RAGService:
         Initialize RAG service
         
         Args:
-            api_key: OpenAI API key for embeddings
+            api_key: Not used (kept for compatibility)
             index_path: Path to FAISS index
         """
         self.index_path = index_path
@@ -26,7 +26,10 @@ class RAGService:
         
         try:
             if os.path.exists(index_path):
-                embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+                # Use HuggingFace embeddings (free and local)
+                embeddings = HuggingFaceEmbeddings(
+                    model_name="sentence-transformers/all-MiniLM-L6-v2"
+                )
                 self.vectorstore = FAISS.load_local(
                     index_path,
                     embeddings,

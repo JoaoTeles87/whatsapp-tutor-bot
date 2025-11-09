@@ -3,7 +3,7 @@ Script to prepare RAG index from school documents
 """
 import os
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
@@ -33,10 +33,11 @@ def create_rag_index():
     splits = text_splitter.split_documents(documents)
     print(f"✅ Split into {len(splits)} chunks")
     
-    # Create embeddings
+    # Create embeddings (using HuggingFace - free and local)
     print("🔄 Creating embeddings...")
-    embeddings = OpenAIEmbeddings(
-        openai_api_key=os.getenv("LLM_API_KEY")
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
     
     # Create FAISS index

@@ -1,0 +1,41 @@
+{
+  "total_requests": 12,
+  "total_tokens": 1281,
+  "total_cost": 0.0,
+  "by_provider": {
+    "groq": {
+      "requests": 12,
+      "tokens": 1281,
+      "cost": 0.0
+    }
+  },
+  "by_user": {
+    "5511999999999": {
+      "requests": 1,
+      "tokens": 60,
+      "cost": 0.0
+    },
+    "558132991244": {
+      "requests": 3,
+      "tokens": 135,
+      "cost": 0.0
+    },
+    "558195741999": {
+      "requests": 6,
+      "tokens": 996,
+      "cost": 0.0
+    },
+    "558198991001": {
+      "requests": 2,
+      "tokens": 90,
+      "cost": 0.0
+    }
+  },
+  "daily": {
+    "2025-11-09": {
+      "requests": 12,
+      "tokens": 1281,
+      "cost": 0.0
+    }
+  }
+}

@@ -1,4 +1,4 @@
-# Leo Educational Agent
+# Nino Educational Agent
 
 > ⚠️ **Status**: MVP/Protótipo de Hackathon - Funcional mas não pronto para produção
 
@@ -146,7 +146,7 @@ http://seu-servidor:5000/webhook
 5. Resposta é enviada de volta via Evolution API
 6. Aluno recebe a mensagem no WhatsApp
 
-## Modos de Interação do Leo
+## Modos de Interação do Nino
 
 ### Modo 1: Conversa Empática
 Quando o aluno desabafa ou fala sobre sentimentos:

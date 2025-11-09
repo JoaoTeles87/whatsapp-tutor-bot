@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime, timedelta
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Configuração da página
 st.set_page_config(
@@ -20,7 +22,13 @@ def carregar_dados():
         with open('alertas.json', 'r', encoding='utf-8') as f:
             dados = json.load(f)
         df = pd.DataFrame(dados)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        # Parse timestamp with ISO8601 format to handle microseconds
+        df['timestamp'] = pd.to_datetime(df['timestamp'], format='ISO8601')
+        
+        # Remover timezone do timestamp se existir para comparação
+        if df['timestamp'].dt.tz is not None:
+            df['timestamp'] = df['timestamp'].dt.tz_localize(None)
+        
         return df
     except FileNotFoundError:
         st.error("Arquivo alertas.json não encontrado!")
@@ -40,163 +48,281 @@ if df.empty:
 st.sidebar.header("⚙️ Filtros")
 periodo = st.sidebar.selectbox(
     "Período",
-    ["Últimos 7 dias", "Últimos 30 dias"]
+    ["Últimos 7 dias", "Últimos 30 dias", "Todos"]
 )
 
-# Calcular data de corte (com timezone UTC para compatibilidade)
-data_atual = pd.Timestamp.now(tz='UTC')
-if periodo == "Últimos 7 dias":
-    data_corte = data_atual - pd.Timedelta(days=7)
+# Calcular data de corte
+if periodo != "Todos":
+    data_atual = pd.Timestamp.now()
+    if periodo == "Últimos 7 dias":
+        data_corte = data_atual - pd.Timedelta(days=7)
+    else:
+        data_corte = data_atual - pd.Timedelta(days=30)
+    
+    # Filtrar dados pelo período  
+    df_filtrado = df[df['timestamp'] >= data_corte].copy()
 else:
-    data_corte = data_atual - pd.Timedelta(days=30)
+    df_filtrado = df.copy()
 
-# Filtrar dados pelo período  
-df_filtrado = df[df['timestamp'] >= data_corte].copy()
+# Filtro por nível de risco
+nivel_risco = st.sidebar.multiselect(
+    "Nível de Risco",
+    ["🔴 Alto (≥0.7)", "🟠 Médio (0.5-0.7)", "🟢 Baixo (<0.5)"],
+    default=["🔴 Alto (≥0.7)", "🟠 Médio (0.5-0.7)", "🟢 Baixo (<0.5)"]
+)
 
-# KPIs principais
-st.header("📊 Indicadores Principais")
-col1, col2, col3 = st.columns(3)
+# Aplicar filtro de risco
+if nivel_risco:
+    mask = pd.Series([False] * len(df_filtrado))
+    if "🔴 Alto (≥0.7)" in nivel_risco:
+        mask |= df_filtrado['score_desmotivacao'] >= 0.7
+    if "🟠 Médio (0.5-0.7)" in nivel_risco:
+        mask |= (df_filtrado['score_desmotivacao'] >= 0.5) & (df_filtrado['score_desmotivacao'] < 0.7)
+    if "🟢 Baixo (<0.5)" in nivel_risco:
+        mask |= df_filtrado['score_desmotivacao'] < 0.5
+    df_filtrado = df_filtrado[mask]
 
-# Total de alertas (score > 0.6)
-alertas_criticos = df_filtrado[df_filtrado['score_desmotivacao'] > 0.6]
-total_alertas = len(alertas_criticos)
+# KPIs principais em cards
+st.header("📊 Visão Geral")
 
-# Média do score
-media_score = df_filtrado['score_desmotivacao'].mean() if len(df_filtrado) > 0 else 0
+col1, col2, col3, col4 = st.columns(4)
 
-# Total de alunos monitorados
-total_alunos = len(df_filtrado)
+# Total de alertas críticos
+alertas_criticos = len(df_filtrado[df_filtrado['score_desmotivacao'] >= 0.7])
+alertas_medios = len(df_filtrado[(df_filtrado['score_desmotivacao'] >= 0.5) & (df_filtrado['score_desmotivacao'] < 0.7)])
+alertas_baixos = len(df_filtrado[df_filtrado['score_desmotivacao'] < 0.5])
 
 with col1:
     st.metric(
-        label="🚨 Total de Alertas",
-        value=total_alertas,
-        help="Alunos com score de desmotivação > 0.6"
+        label="🔴 Alertas Críticos",
+        value=alertas_criticos,
+        delta=f"{(alertas_criticos/len(df_filtrado)*100):.0f}%" if len(df_filtrado) > 0 else "0%",
+        delta_color="inverse"
     )
 
 with col2:
     st.metric(
-        label="📈 Média do Score",
-        value=f"{media_score:.2f}",
-        help="Média do score de desmotivação no período"
+        label="🟠 Alertas Médios",
+        value=alertas_medios,
+        delta=f"{(alertas_medios/len(df_filtrado)*100):.0f}%" if len(df_filtrado) > 0 else "0%",
+        delta_color="off"
     )
 
 with col3:
     st.metric(
-        label="👥 Alunos Monitorados",
-        value=total_alunos
+        label="🟢 Alunos Engajados",
+        value=alertas_baixos,
+        delta=f"{(alertas_baixos/len(df_filtrado)*100):.0f}%" if len(df_filtrado) > 0 else "0%",
+        delta_color="normal"
+    )
+
+with col4:
+    media_score = df_filtrado['score_desmotivacao'].mean() if len(df_filtrado) > 0 else 0
+    st.metric(
+        label="📈 Score Médio",
+        value=f"{media_score:.2f}",
+        delta="Risco Geral",
+        delta_color="off"
     )
 
 st.divider()
 
-# Heatmap da Paraíba
-st.header("🗺️ Mapa de Atenção por Cidade")
+# Gráficos de análise
+col1, col2 = st.columns(2)
 
-if len(df_filtrado) > 0:
-    # Agregar dados por cidade
-    df_cidades = df_filtrado.groupby(['cidade', 'lat', 'lon']).agg({
-        'score_desmotivacao': ['mean', 'count']
-    }).reset_index()
+with col1:
+    st.subheader("📊 Distribuição de Risco")
     
-    df_cidades.columns = ['cidade', 'lat', 'lon', 'score_medio', 'num_alertas']
-    
-    # Normalizar o tamanho dos pontos (entre 100 e 500)
-    df_cidades['size'] = 100 + (df_cidades['score_medio'] * 400)
-    
-    # Criar coluna de cor baseada no score
-    def get_color(score):
-        if score >= 0.7:
-            return [255, 0, 0, 160]  # Vermelho
-        elif score >= 0.5:
-            return [255, 165, 0, 160]  # Laranja
-        else:
-            return [0, 255, 0, 160]  # Verde
-    
-    df_cidades['color'] = df_cidades['score_medio'].apply(get_color)
-    
-    # Exibir informações das cidades
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Mapa centrado na Paraíba
-        st.map(
-            df_cidades,
-            latitude='lat',
-            longitude='lon',
-            size='size',
-            color='color',
-            zoom=7
-        )
-    
-    with col2:
-        st.subheader("📍 Resumo por Cidade")
-        for _, row in df_cidades.sort_values('score_medio', ascending=False).iterrows():
-            cor_emoji = "🔴" if row['score_medio'] >= 0.7 else "🟠" if row['score_medio'] >= 0.5 else "🟢"
-            st.write(f"{cor_emoji} **{row['cidade']}**")
-            st.write(f"   Score médio: {row['score_medio']:.2f}")
-            st.write(f"   Alertas: {int(row['num_alertas'])}")
-            st.write("")
-else:
-    st.info("Nenhum dado disponível para o período selecionado.")
-
-st.divider()
-
-# Tabela de alertas prioritários
-st.header("⚠️ Alunos Prioritários")
-
-if len(df_filtrado) > 0:
-    # Ordenar por score (maior para menor)
-    df_prioridade = df_filtrado.sort_values('score_desmotivacao', ascending=False).copy()
-    
-    # Preparar dados para exibição
-    df_exibicao = pd.DataFrame({
-        'Aluno (ID Anônimo)': df_prioridade['aluno_id'],
-        'Score': df_prioridade['score_desmotivacao'].apply(lambda x: f"{x:.2f}"),
-        'Cidade': df_prioridade['cidade'],
-        'Observação Chave': df_prioridade['observacoes_chave'].apply(
-            lambda x: '; '.join(x) if isinstance(x, list) else str(x)
-        ),
-        'Data': df_prioridade['timestamp'].dt.strftime('%d/%m/%Y %H:%M')
+    # Gráfico de pizza
+    risk_data = pd.DataFrame({
+        'Nível': ['🔴 Alto', '🟠 Médio', '🟢 Baixo'],
+        'Quantidade': [alertas_criticos, alertas_medios, alertas_baixos],
+        'Cor': ['#ff4444', '#ff9944', '#44ff44']
     })
     
-    # Aplicar estilo condicional
-    def highlight_score(row):
-        score = float(row['Score'])
-        if score >= 0.7:
-            return ['background-color: #ffcccc'] * len(row)
-        elif score >= 0.5:
-            return ['background-color: #ffe6cc'] * len(row)
-        else:
-            return [''] * len(row)
-    
-    st.dataframe(
-        df_exibicao,
-        use_container_width=True,
-        hide_index=True
+    fig_pie = px.pie(
+        risk_data, 
+        values='Quantidade', 
+        names='Nível',
+        color='Nível',
+        color_discrete_map={'🔴 Alto': '#ff4444', '🟠 Médio': '#ff9944', '🟢 Baixo': '#44ff44'},
+        hole=0.4
     )
+    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    fig_pie.update_layout(showlegend=False, height=300)
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+with col2:
+    st.subheader("🏫 Top 5 Escolas com Maior Risco")
     
-    # Estatísticas adicionais
-    st.subheader("📊 Distribuição de Risco")
-    col1, col2, col3 = st.columns(3)
+    if 'escola' in df_filtrado.columns:
+        escola_risk = df_filtrado.groupby('escola').agg({
+            'score_desmotivacao': 'mean',
+            'aluno_id': 'count'
+        }).reset_index()
+        escola_risk.columns = ['Escola', 'Score Médio', 'Alunos']
+        escola_risk = escola_risk.sort_values('Score Médio', ascending=False).head(5)
+        
+        fig_bar = px.bar(
+            escola_risk,
+            x='Score Médio',
+            y='Escola',
+            orientation='h',
+            text='Alunos',
+            color='Score Médio',
+            color_continuous_scale=['green', 'yellow', 'red'],
+            range_color=[0, 1]
+        )
+        fig_bar.update_traces(texttemplate='%{text} alunos', textposition='outside')
+        fig_bar.update_layout(showlegend=False, height=300, xaxis_range=[0, 1])
+        st.plotly_chart(fig_bar, use_container_width=True)
+    else:
+        st.info("Campo 'escola' não disponível nos dados")
+
+st.divider()
+
+# Mapa e insights lado a lado
+st.header("🗺️ Mapa de Calor - Paraíba")
+
+col1, col2 = st.columns([3, 2])
+
+with col1:
+    if len(df_filtrado) > 0:
+        # Preparar dados para o mapa
+        df_map = df_filtrado.copy()
+        df_map['size'] = 100 + (df_map['score_desmotivacao'] * 400)
+        
+        # Criar mapa com plotly para melhor visualização
+        fig_map = px.scatter_mapbox(
+            df_map,
+            lat='lat',
+            lon='lon',
+            size='size',
+            color='score_desmotivacao',
+            hover_name='escola' if 'escola' in df_map.columns else 'cidade',
+            hover_data={
+                'score_desmotivacao': ':.2f',
+                'cidade': True,
+                'lat': False,
+                'lon': False,
+                'size': False
+            },
+            color_continuous_scale=['green', 'yellow', 'red'],
+            range_color=[0, 1],
+            zoom=8,  # Zoom focado em João Pessoa e Campina Grande
+            height=500
+        )
+        
+        fig_map.update_layout(
+            mapbox_style="open-street-map",
+            mapbox_center={"lat": -7.17, "lon": -35.4},  # Entre João Pessoa e Campina Grande
+            margin={"r": 0, "t": 0, "l": 0, "b": 0}
+        )
+        
+        st.plotly_chart(fig_map, use_container_width=True)
+    else:
+        st.info("Nenhum dado disponível para o mapa")
+
+with col2:
+    st.subheader("💡 Insights para Gestão")
     
-    alto_risco = len(df_filtrado[df_filtrado['score_desmotivacao'] >= 0.7])
-    medio_risco = len(df_filtrado[(df_filtrado['score_desmotivacao'] >= 0.5) & 
-                                   (df_filtrado['score_desmotivacao'] < 0.7)])
-    baixo_risco = len(df_filtrado[df_filtrado['score_desmotivacao'] < 0.5])
+    if len(df_filtrado) > 0:
+        # Insight 1: Escola com maior risco
+        if 'escola' in df_filtrado.columns:
+            escola_maior_risco = df_filtrado.groupby('escola')['score_desmotivacao'].mean().idxmax()
+            score_maior_risco = df_filtrado.groupby('escola')['score_desmotivacao'].mean().max()
+            
+            st.markdown(f"""
+            **🎯 Prioridade Máxima:**
+            - **{escola_maior_risco}**
+            - Score médio: {score_maior_risco:.2f}
+            - Requer intervenção imediata
+            """)
+            
+            st.divider()
+        
+        # Insight 2: Tendência de engajamento
+        if 'engajamento_emocional' in df_filtrado.columns:
+            eng_emocional_medio = df_filtrado['engajamento_emocional'].mean()
+            eng_comportamental_medio = df_filtrado['engajamento_comportamental'].mean()
+            eng_cognitivo_medio = df_filtrado['engajamento_cognitivo'].mean()
+            
+            st.markdown("**📈 Engajamento Médio:**")
+            st.progress(eng_emocional_medio, text=f"Emocional: {eng_emocional_medio:.0%}")
+            st.progress(eng_comportamental_medio, text=f"Comportamental: {eng_comportamental_medio:.0%}")
+            st.progress(eng_cognitivo_medio, text=f"Cognitivo: {eng_cognitivo_medio:.0%}")
+            
+            st.divider()
+        
+        # Insight 3: Alunos que precisam de atenção
+        alunos_criticos = df_filtrado[df_filtrado['score_desmotivacao'] >= 0.7]
+        if len(alunos_criticos) > 0:
+            st.markdown(f"""
+            **⚠️ Ação Necessária:**
+            - {len(alunos_criticos)} alunos em risco crítico
+            - Contato com famílias recomendado
+            - Acompanhamento psicopedagógico
+            """)
+        else:
+            st.success("✅ Nenhum aluno em risco crítico no momento!")
+
+st.divider()
+
+# Tabela de alunos prioritários - mais compacta e informativa
+st.header("⚠️ Alunos Prioritários - Ação Requerida")
+
+if len(df_filtrado) > 0:
+    # Filtrar apenas alunos com risco médio ou alto
+    df_prioridade = df_filtrado[df_filtrado['score_desmotivacao'] >= 0.5].sort_values('score_desmotivacao', ascending=False).copy()
     
-    with col1:
-        st.metric("🔴 Alto Risco", alto_risco, help="Score >= 0.7")
-    with col2:
-        st.metric("🟠 Médio Risco", medio_risco, help="0.5 <= Score < 0.7")
-    with col3:
-        st.metric("🟢 Baixo Risco", baixo_risco, help="Score < 0.5")
+    if len(df_prioridade) > 0:
+        # Preparar dados para exibição
+        colunas = {
+            'ID': df_prioridade['aluno_id'].apply(lambda x: f"***{str(x)[-4:]}"),  # Últimos 4 dígitos
+            'Score': df_prioridade['score_desmotivacao'].apply(lambda x: f"{x:.2f}"),
+            'Risco': df_prioridade['score_desmotivacao'].apply(
+                lambda x: "🔴 Crítico" if x >= 0.7 else "🟠 Médio"
+            ),
+            'Principal Observação': df_prioridade['observacoes_chave'].apply(
+                lambda x: x[0] if isinstance(x, list) and len(x) > 0 else str(x)
+            ),
+            'Data': df_prioridade['timestamp'].dt.strftime('%d/%m %H:%M')
+        }
+        
+        # Adicionar escola se disponível
+        if 'escola' in df_prioridade.columns:
+            colunas['Escola'] = df_prioridade['escola']
+        
+        df_exibicao = pd.DataFrame(colunas)
+        
+        # Exibir tabela com estilo
+        st.dataframe(
+            df_exibicao,
+            use_container_width=True,
+            hide_index=True,
+            height=400
+        )
+        
+        # Estatísticas de ação
+        criticos_count = len(df_prioridade[df_prioridade['score_desmotivacao'] >= 0.7])
+        st.info(f"💼 **Recomendação**: Priorizar contato com os {criticos_count} alunos em risco crítico nas próximas 24-48h")
+    else:
+        st.success("✅ Nenhum aluno requer atenção prioritária no momento!")
 else:
     st.info("Nenhum aluno para exibir no período selecionado.")
 
-# Rodapé
+# Rodapé com informações
 st.divider()
-st.caption("🦜 Sabiá - Sistema de Acompanhamento de Bem-estar e Inteligência Acadêmica | Paraíba 2025")
-st.caption(f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.caption("🦜 **Sabiá** - Sistema de Acompanhamento de Bem-estar e Inteligência Acadêmica")
+
+with col2:
+    st.caption(f"📅 Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+with col3:
+    st.caption(f"📊 Total de registros: {len(df_filtrado)}")
 
 # Botão de atualização manual
 if st.sidebar.button("🔄 Atualizar Dados"):

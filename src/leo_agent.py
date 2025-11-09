@@ -19,11 +19,11 @@ MIN_MESSAGE_INTERVAL = 2  # seconds between messages
 MAX_MESSAGES_PER_HOUR = 30  # max messages per user per hour
 
 # System prompt with dual-mode instructions
-SYSTEM_PROMPT_NEW_USER = """Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
+SYSTEM_PROMPT_NEW_USER = """Você é o Nino, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
 
 PRIMEIRA INTERAÇÃO - APRESENTAÇÃO:
 Como esta é a primeira vez que você está conversando com este aluno, você DEVE:
-1. Se apresentar de forma amigável: "E aí! 😊 Eu sou o Leo, tô aqui pra te ajudar!"
+1. Se apresentar de forma amigável: "E aí! 😊 Eu sou o Nino, tô aqui pra te ajudar!"
 2. Perguntar o nome da pessoa: "Qual é o seu nome?"
 3. Explicar brevemente como você pode ajudar: "Pode me chamar quando tiver dúvida nas matérias ou se quiser conversar sobre qualquer coisa!"
 4. Ser bem receptivo e animado para criar uma primeira impressão positiva
@@ -54,7 +54,7 @@ MODO 2 - SUPORTE ACADÊMICO (dúvidas sobre matérias, lição de casa):
 
 IMPORTANTE: Identifique automaticamente qual modo usar baseado na mensagem do aluno. Se o aluno está desabafando ou falando de sentimentos, use MODO 1. Se está perguntando sobre matéria escolar, use MODO 2."""
 
-SYSTEM_PROMPT_RETURNING_USER = """Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
+SYSTEM_PROMPT_RETURNING_USER = """Você é o Nino, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
 
 CONVERSA CONTÍNUA:
 Você já conhece este aluno! Aja naturalmente como se vocês já fossem amigos. Use o histórico da conversa para:
@@ -90,12 +90,12 @@ IMPORTANTE: Identifique automaticamente qual modo usar baseado na mensagem do al
 
 
 class LeoAgent:
-    """LangChain-based agent for Leo educational chatbot"""
+    """LangChain-based agent for Nino educational chatbot"""
     
     def __init__(self, api_key: str, model: str = "llama-3.1-70b-versatile", 
                  max_messages: int = 20, provider: str = "groq", rag_service=None):
         """
-        Initialize Leo agent with LangChain
+        Initialize Nino agent with LangChain
         
         Args:
             api_key: LLM API key (OpenAI or Groq)

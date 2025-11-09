@@ -16,7 +16,7 @@ class ProfessorAgent:
     
     # Known professor numbers (can be configured)
     PROFESSOR_NUMBERS = [
-        "558132991244",  # Professor Carlos (example)
+        # "558132991244",  # Temporarily disabled for testing
         "558195435686",  # Professor João
         # Add more professor numbers here
     ]

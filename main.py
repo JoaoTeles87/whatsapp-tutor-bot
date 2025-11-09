@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    logger.info("Starting Leo Educational Agent...")
+    logger.info("Starting Nino Educational Agent...")
     
     try:
         # Validate configuration
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down Leo Educational Agent...")
+    logger.info("Shutting down Nino Educational Agent...")
 
 
 # Initialize components
@@ -57,7 +57,7 @@ analytics_agent = AgenteAnalista(api_key=config.LLM_API_KEY, model=config.LLM_MO
 # Create Professor agent
 professor_agent = ProfessorAgent(api_key=config.LLM_API_KEY, model=config.LLM_MODEL)
 
-# Create Leo agent with RAG
+# Create Nino agent with RAG
 leo_agent = LeoAgent(
     api_key=config.LLM_API_KEY,
     model=config.LLM_MODEL,
@@ -73,11 +73,12 @@ evolution_client = EvolutionAPIClient(
     instance=config.EVOLUTION_INSTANCE
 )
 
-# Create message processor with professor agent
+# Create message processor with professor agent and analytics
 message_processor = MessageProcessor(
     leo_agent=leo_agent,
     evolution_client=evolution_client,
-    professor_agent=professor_agent
+    professor_agent=professor_agent,
+    analytics_agent=analytics_agent
 )
 
 # Create FastAPI app with webhook
@@ -86,7 +87,7 @@ app = create_webhook_app(message_processor)
 # Update lifespan
 app.router.lifespan_context = lifespan
 
-logger.info("Leo Educational Agent initialized successfully")
+logger.info("Nino Educational Agent initialized successfully")
 logger.info(f"Server will run on port {config.SERVER_PORT}")
 logger.info(f"Using LLM provider: {config.LLM_PROVIDER}")
 logger.info(f"Using LLM model: {config.LLM_MODEL}")
