@@ -187,5 +187,68 @@
     "cidade": "João Pessoa",
     "lat": -7.1195,
     "lon": -34.845
+  },
+  {
+    "aluno_id": "558195741999",
+    "timestamp": "2025-11-09T09:32:55.856002",
+    "engajamento_comportamental": 0.2,
+    "engajamento_emocional": 0.1,
+    "engajamento_cognitivo": 0.0,
+    "score_desmotivacao": 0.93,
+    "observacoes_chave": [
+      "Oi",
+      "Pedro"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "558195741999",
+    "timestamp": "2025-11-09T09:33:12.037036",
+    "engajamento_comportamental": 0.5,
+    "engajamento_emocional": 0.2,
+    "engajamento_cognitivo": 0.1,
+    "score_desmotivacao": 0.73,
+    "observacoes_chave": [
+      "Estou triste",
+      "Sinto muito que você esteja se sentindo triste, Pedro"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "558198991001",
+    "timestamp": "2025-11-09T09:38:28.563433",
+    "engajamento_comportamental": 0.2,
+    "engajamento_emocional": 0.1,
+    "engajamento_cognitivo": 0.0,
+    "score_desmotivacao": 0.93,
+    "observacoes_chave": [
+      "Meu nome é João"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
+  },
+  {
+    "aluno_id": "558198991001",
+    "timestamp": "2025-11-09T09:38:46.869966",
+    "engajamento_comportamental": 0.8,
+    "engajamento_emocional": 0.7,
+    "engajamento_cognitivo": 0.9,
+    "score_desmotivacao": 0.2,
+    "observacoes_chave": [
+      "Fala para min em forma de Rap o que é regra de três",
+      "Então, João, agora você sabe"
+    ],
+    "escola": "Vista Alegre Park, Haras e Hípica",
+    "cidade": "João Pessoa",
+    "lat": -7.1195,
+    "lon": -34.845
   }
 ]
