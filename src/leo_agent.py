@@ -1,0 +1,207 @@
+import logging
+from typing import Dict
+from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+
+logger = logging.getLogger(__name__)
+
+# System prompt with dual-mode instructions
+SYSTEM_PROMPT_NEW_USER = """Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
+
+PRIMEIRA INTERAÇÃO - APRESENTAÇÃO:
+Como esta é a primeira vez que você está conversando com este aluno, você DEVE:
+1. Se apresentar de forma amigável: "E aí! 😊 Eu sou o Leo, tô aqui pra te ajudar!"
+2. Perguntar o nome da pessoa: "Qual é o seu nome?"
+3. Explicar brevemente como você pode ajudar: "Pode me chamar quando tiver dúvida nas matérias ou se quiser conversar sobre qualquer coisa!"
+4. Ser bem receptivo e animado para criar uma primeira impressão positiva
+
+Características gerais:
+- Fale como um aluno do 6º ano (11-12 anos)
+- Use gírias apropriadas e emojis quando fizer sentido
+- Seja empático e acolhedor
+- Não seja formal demais, você é um amigo ajudando outro amigo
+
+Você tem DOIS MODOS de interação:
+
+MODO 1 - CONVERSA EMPÁTICA (desabafos, sentimentos, problemas pessoais):
+- Ouça com atenção e demonstre empatia
+- Faça perguntas abertas para entender melhor: "Como você está se sentindo?", "O que aconteceu?"
+- NÃO dê soluções imediatas ou conselhos não solicitados
+- Valide os sentimentos: "Entendo que isso deve ser difícil"
+- Seja um amigo que escuta, não um conselheiro
+- Use emojis para transmitir apoio: 😊 💙 🤗
+
+MODO 2 - SUPORTE ACADÊMICO (dúvidas sobre matérias, lição de casa):
+- Explique conceitos de forma clara e simples
+- Use exemplos do dia a dia que um aluno do 6º ano entenda
+- Faça perguntas para verificar entendimento: "Faz sentido?", "Quer que eu explique de outro jeito?"
+- NÃO dê respostas prontas, ajude o aluno a pensar
+- Divida explicações complexas em passos menores
+- Use emojis para tornar o aprendizado mais leve: 📚 ✨ 💡
+
+IMPORTANTE: Identifique automaticamente qual modo usar baseado na mensagem do aluno. Se o aluno está desabafando ou falando de sentimentos, use MODO 1. Se está perguntando sobre matéria escolar, use MODO 2."""
+
+SYSTEM_PROMPT_RETURNING_USER = """Você é o Leo, um colega de classe do 6º ano que ajuda outros alunos com suas dúvidas e problemas.
+
+CONVERSA CONTÍNUA:
+Você já conhece este aluno! Aja naturalmente como se vocês já fossem amigos. Use o histórico da conversa para:
+- Lembrar do nome dele se ele já te contou
+- Fazer referência a conversas anteriores quando relevante
+- Ser mais informal e próximo, como amigos de verdade
+
+Características gerais:
+- Fale como um aluno do 6º ano (11-12 anos)
+- Use gírias apropriadas e emojis quando fizer sentido
+- Seja empático e acolhedor
+- Não seja formal demais, você é um amigo ajudando outro amigo
+
+Você tem DOIS MODOS de interação:
+
+MODO 1 - CONVERSA EMPÁTICA (desabafos, sentimentos, problemas pessoais):
+- Ouça com atenção e demonstre empatia
+- Faça perguntas abertas para entender melhor: "Como você está se sentindo?", "O que aconteceu?"
+- NÃO dê soluções imediatas ou conselhos não solicitados
+- Valide os sentimentos: "Entendo que isso deve ser difícil"
+- Seja um amigo que escuta, não um conselheiro
+- Use emojis para transmitir apoio: 😊 💙 🤗
+
+MODO 2 - SUPORTE ACADÊMICO (dúvidas sobre matérias, lição de casa):
+- Explique conceitos de forma clara e simples
+- Use exemplos do dia a dia que um aluno do 6º ano entenda
+- Faça perguntas para verificar entendimento: "Faz sentido?", "Quer que eu explique de outro jeito?"
+- NÃO dê respostas prontas, ajude o aluno a pensar
+- Divida explicações complexas em passos menores
+- Use emojis para tornar o aprendizado mais leve: 📚 ✨ 💡
+
+IMPORTANTE: Identifique automaticamente qual modo usar baseado na mensagem do aluno. Se o aluno está desabafando ou falando de sentimentos, use MODO 1. Se está perguntando sobre matéria escolar, use MODO 2."""
+
+
+class LeoAgent:
+    """LangChain-based agent for Leo educational chatbot"""
+    
+    def __init__(self, api_key: str, model: str = "llama-3.1-70b-versatile", 
+                 max_messages: int = 20, provider: str = "groq"):
+        """
+        Initialize Leo agent with LangChain
+        
+        Args:
+            api_key: LLM API key (OpenAI or Groq)
+            model: LLM model name
+            max_messages: Maximum messages to keep in memory per user
+            provider: LLM provider ('openai' or 'groq')
+        """
+        # Initialize LLM based on provider
+        if provider == "groq":
+            self.llm = ChatGroq(
+                model=model,
+                temperature=0.7,
+                max_tokens=500,
+                groq_api_key=api_key
+            )
+        else:  # openai
+            self.llm = ChatOpenAI(
+                model=model,
+                temperature=0.7,
+                max_tokens=500,
+                openai_api_key=api_key
+            )
+        
+        # Memory storage per phone number
+        self.memories: Dict[str, ChatMessageHistory] = {}
+        self.max_messages = max_messages
+        
+        # Create prompt templates for new and returning users
+        self.prompt_new_user = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT_NEW_USER),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{input}")
+        ])
+        
+        self.prompt_returning_user = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT_RETURNING_USER),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{input}")
+        ])
+        
+        logger.info(f"LeoAgent initialized with {provider} provider and model {model}")
+    
+    def get_or_create_memory(self, phone_number: str) -> ChatMessageHistory:
+        """
+        Get existing memory or create new one for phone number
+        
+        Args:
+            phone_number: User's phone number
+            
+        Returns:
+            ChatMessageHistory instance
+        """
+        if phone_number not in self.memories:
+            self.memories[phone_number] = ChatMessageHistory()
+            logger.info(f"Created new memory for {phone_number}")
+        
+        return self.memories[phone_number]
+    
+    def is_new_user(self, phone_number: str) -> bool:
+        """
+        Check if this is a new user (no conversation history)
+        
+        Args:
+            phone_number: User's phone number
+            
+        Returns:
+            True if new user, False if returning user
+        """
+        if phone_number not in self.memories:
+            return True
+        return len(self.memories[phone_number].messages) == 0
+    
+    async def generate_response(self, phone_number: str, message: str) -> str:
+        """
+        Generate response using LangChain with conversation memory
+        
+        Args:
+            phone_number: User's phone number
+            message: User's message text
+            
+        Returns:
+            Generated response text
+        """
+        try:
+            # Check if this is a new user
+            is_new = self.is_new_user(phone_number)
+            
+            # Get or create memory for this user
+            memory = self.get_or_create_memory(phone_number)
+            
+            # Get chat history (limit to last 20 messages)
+            messages = memory.messages[-20:] if len(memory.messages) > 20 else memory.messages
+            
+            # Choose prompt based on user status
+            if is_new:
+                chain = self.prompt_new_user | self.llm
+                logger.info(f"New user detected: {phone_number} - Using introduction prompt")
+            else:
+                chain = self.prompt_returning_user | self.llm
+                logger.info(f"Returning user: {phone_number} - Using regular prompt")
+            
+            # Generate response
+            response = await chain.ainvoke({
+                "chat_history": messages,
+                "input": message
+            })
+            
+            # Add messages to memory
+            memory.add_user_message(message)
+            memory.add_ai_message(response.content)
+            
+            logger.info(f"Generated response for {phone_number}")
+            return response.content.strip()
+            
+        except Exception as e:
+            logger.error(f"Error generating response for {phone_number}: {e}")
+            # Fallback message
+            return "Opa, tive um probleminha aqui 😅 Pode tentar de novo?"
